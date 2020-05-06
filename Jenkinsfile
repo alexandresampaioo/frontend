@@ -9,6 +9,7 @@ podTemplate(containers: [
     node('questcode') {
         def REPOS
         def IMAGE_VERSION
+        def IMAGE_POSFIX
         def KUBE_NAMESPACE
         def IMAGE_NAME="frontend"
         def ENVIRONMENT
@@ -17,6 +18,8 @@ podTemplate(containers: [
         def HELM_CHART_NAME="questcode/frontend"
         def HELM_DEPLOY_NAME
         def CHARTMUSEUM_URL="http://helm-chartmuseum:8080"
+        def NODE_PORT="30080"
+
         stage('Checkout') {
             echo 'Iniciando clone do repositorio'
             REPOS = checkout([$class: 'GitSCM', branches: [[name: '*/master'], [name: '*/develop']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github', url: GIT_REPOS_URL]]])
@@ -27,6 +30,8 @@ podTemplate(containers: [
             }else if(GIT_BRANCH.equals("origin/develop")){
                 KUBE_NAMESPACE = "staging"
                 ENVIRONMENT="staging"
+                IMAGE_POSFIX="-RC"
+                NODE_PORT="31080"
             }else{
                 def error = echo "Nao existe pipeline para a branch ${GIT_BRANCH}"
                 echo error
@@ -34,7 +39,7 @@ podTemplate(containers: [
             }
             HELM_DEPLOY_NAME=KUBE_NAMESPACE+"-frontend"
             IMAGE_VERSION = sh label: '', returnStdout: true, script: 'sh read-package-version.sh'
-            IMAGE_VERSION = IMAGE_VERSION.trim()
+            IMAGE_VERSION = IMAGE_VERSION.trim()+IMAGE_POSFIX
         }
         stage('Package') {
             container('questcode') {
@@ -55,9 +60,9 @@ podTemplate(containers: [
                 sh label: '', script: "helm upgrade  --namespace=${KUBE_NAMESPACE} staging-frontend questcode/frontend --set image.tag=${IMAGE_VERSION}"
             
                 try{
-                    sh label: '', script: "helm upgrade  --namespace=${KUBE_NAMESPACE} ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set image.tag=${IMAGE_VERSION}"
+                    sh label: '', script: "helm upgrade  --namespace=${KUBE_NAMESPACE} ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set image.tag=${IMAGE_VERSION} --set service.nodePort=${NODE_PORT}"
                 }catch(Exception e){
-                    sh label: '', script: "helm install  --namespace=${KUBE_NAMESPACE} --name ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set image.tag=${IMAGE_VERSION}"
+                    sh label: '', script: "helm install  --namespace=${KUBE_NAMESPACE} --name ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set image.tag=${IMAGE_VERSION} --set service.nodePort=${NODE_PORT}"
                 }
             }
         }
