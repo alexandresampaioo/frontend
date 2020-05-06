@@ -8,8 +8,8 @@ podTemplate(containers: [
     ) {
     node('questcode') {
         def REPOS
-        def IMAGE_VERSION=""
-        def IMAGE_POSFIX
+        def IMAGE_VERSION
+        def IMAGE_POSFIX=""
         def KUBE_NAMESPACE
         def IMAGE_NAME="frontend"
         def ENVIRONMENT
