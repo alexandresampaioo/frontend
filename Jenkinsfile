@@ -62,7 +62,7 @@ podTemplate(containers: [
                 try{
                     sh label: '', script: "helm upgrade  --namespace=${KUBE_NAMESPACE} ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set service.nodePort=${NODE_PORT} --set image.tag=${IMAGE_VERSION}"
                 }catch(Exception e){
-                    sh label: '', script: "helm install  --namespace=${KUBE_NAMESPACE} --name ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set image.tag=${IMAGE_VERSION} --set service.nodePort=${NODE_PORT}"
+                    sh label: '', script: "helm install  --namespace=${KUBE_NAMESPACE} --name ${HELM_DEPLOY_NAME} ${HELM_CHART_NAME} --set service.nodePort=${NODE_PORT} --set image.tag=${IMAGE_VERSION}"
                 }
             }
         }
